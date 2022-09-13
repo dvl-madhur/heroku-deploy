@@ -3,6 +3,7 @@ from flask_cors import CORS,cross_origin
 import requests
 from bs4 import BeautifulSoup as bs
 from urllib.request import urlopen as uReq
+from requests.adapters import HTTPAdapter, Retry
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ def index():
             del bigboxes[0:3]
             box = bigboxes[0]
             productLink = "https://www.flipkart.com" + box.div.div.div.a['href']
-            prodRes = requests.get(productLink)
+            prodRes = requests.get(productLink, verify=False)
             prodRes.encoding='utf-8'
             prod_html = bs(prodRes.text, "html.parser")
             print(prod_html)
@@ -78,6 +79,18 @@ def index():
     else:
         return render_template('index.html')
 
+def make_request(url1):
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=0.5)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    response = session.get(url1)
+
+    return response
+
 if __name__ == "__main__":
     #app.run(host='127.0.0.1', port=8001, debug=True)
 	app.run(debug=True)
+
+
